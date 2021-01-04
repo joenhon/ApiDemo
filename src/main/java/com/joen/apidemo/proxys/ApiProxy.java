@@ -63,9 +63,6 @@ public class ApiProxy implements InvocationHandler {
         Object result;
         ApiReq apiReq = map.get(method);
         try {
-            if (true){
-                throw new RuntimeException("测试");
-            }
             if (apiReq == null) {
                 ApiService methodAnnotation = method.getAnnotation(ApiService.class);
                 ApiService classAnnotation = interfaceClass.getAnnotation(ApiService.class);
