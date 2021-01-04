@@ -2,6 +2,7 @@ package com.joen.apidemo.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.joen.apidemo.annotations.ApiService;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
@@ -27,5 +28,9 @@ public interface TestService {
     @ApiService(value = "http://192.168.3.215/Amaidan-Users-Web/user/baseUserCard/page", method = HttpMethod.POST)
     default JSONObject jsonTest(JSONObject object) {
         return object;
+    }
+
+    default void error(Exception exception){
+        logger.error(",{}",ExceptionUtils.getStackTrace(exception));
     }
 }

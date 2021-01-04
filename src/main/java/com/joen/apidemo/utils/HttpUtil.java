@@ -1,293 +1,171 @@
 package com.joen.apidemo.utils;
 
-import org.apache.commons.lang3.StringUtils;
 
-import javax.net.ssl.*;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.Consts;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.BasicHttpEntity;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
- * http 工具类
- *
- * @author cloud cloud
- * @create 2017/10/18
- **/
+ * @Description
+ * @Author Joen
+ * @Date 2021-01-04 14:48:14
+ */
 public class HttpUtil {
-
+    private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
     private static final String CHARSET = "UTF-8";
     private static final String HTTP_POST = "POST";
     private static final String HTTP_GET = "GET";
-    private static final Logger log = Logger.getLogger("HttpUtil");
-    private static final String HTTP_PUT = "PUT";
+    private static final RequestConfig requestConfig = RequestConfig.custom()
+            .setSocketTimeout(5000)
+            .setConnectTimeout(5000)
+            .setConnectionRequestTimeout(5000)
+            .build();
 
-    /**
-     * Send GET request
-     */
-    public static String get(String url, Map<String, Object> queryParas, Map<String, String> headers) {
+    /*post start*/
 
-        HttpURLConnection conn = null;
-        try {
-            conn = getHttpConnection(buildUrlWithQueryString(url, queryParas), HTTP_GET, headers);
-            conn.connect();
-            return readResponseString(conn);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
-    }
 
-    public static String get(String url, Map<String, Object> queryParas) {
-        return get(url, queryParas, null);
-    }
-
-    public static String get(String url) {
-        return get(url, null, null);
-    }
-
-    public static String jsonGet(String url, Map<String, Object> params) {
-        Map<String, String> headers = new HashMap<>();
+    public static String jsonPost(String url) {
+        HashMap<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        return get(url, params, headers);
-    }
-
-
-    /**
-     * Send POST request
-     */
-    public static String post(String url, Map<String, Object> queryParas, String data, Map<String, String> headers) {
-        HttpURLConnection conn = null;
-        try {
-            conn = getHttpConnection(buildUrlWithQueryString(url, queryParas), HTTP_POST, headers);
-            conn.connect();
-
-            if (data != null) {
-                OutputStream out = conn.getOutputStream();
-                out.write(data.getBytes(CHARSET));
-                out.flush();
-                out.close();
-            }
-
-            return readResponseString(conn);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "";
-            //throw new RuntimeException(e);
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
-    }
-
-    public static String post(String url, Map<String, Object> queryParas, String data) {
-        return post(url, queryParas, data, null);
-    }
-
-    public static String post(String url, Map<String, Object> queryParas, Map<String, String> headers) {
-        return post(url, queryParas, null, headers);
-    }
-
-    public static String post(String url, String data, Map<String, String> headers) {
-        return post(url, null, data, headers);
-    }
-
-    public static String post(String url, String data) {
-        return post(url, null, data, null);
+        return post(url, null, null, headers);
     }
 
     public static String jsonPost(String url, String data) {
-        Map<String, String> headers = new HashMap<>();
+        HashMap<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        return post(url, null, data, headers);
+        return post(url, data, null, headers);
     }
 
-    public static String jsonPost(String url, Map<String, String> headers, String data) {
+    public static String jsonPost(String url, String data, Map<String, String> headers) {
+        headers.put("Content-Type", "application/json");
+        return post(url, data, null, headers);
+    }
+
+    public static String jsonPost(String url, Map<String, Object> params) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        return post(url, null, params, headers);
+    }
+
+    public static String jsonPost(String url, Map<String, Object> params, Map<String, String> headers) {
+        headers.put("Content-Type", "application/json");
+        return post(url, null, params, headers);
+    }
+
+    public static String post(String url, String data, Map<String, Object> params, Map<String, String> headers) {
         if (headers == null) {
             headers = new HashMap<>();
         }
-        headers.put("Content-Type", "application/json");
-        return post(url, null, data, headers);
+
+        HttpPost post = new HttpPost(url);
+
+        if (params != null) {
+            List<NameValuePair> pairs = new ArrayList<NameValuePair>();
+            params.forEach((key, value) -> {
+                pairs.add(new BasicNameValuePair(key, String.valueOf(value)));
+            });
+            post.setEntity(new UrlEncodedFormEntity(pairs, Consts.UTF_8));
+        }
+
+        if (data != null) {
+            InputStream stream = new ByteArrayInputStream(data.getBytes(Consts.UTF_8));
+            BasicHttpEntity entity = new BasicHttpEntity();
+            entity.setContent(stream);
+            post.setEntity(entity);
+        }
+
+        headers.forEach(post::addHeader);
+
+
+        post.setConfig(requestConfig);
+
+        try {
+            HttpClient httpClient = HttpClients.createDefault();
+            HttpResponse response = httpClient.execute(post);
+            if (response.getStatusLine().getStatusCode() == 200) {
+                HttpEntity resEntity = response.getEntity();
+                return EntityUtils.toString(resEntity, "utf-8");
+            } else {
+                if (data != null) {
+                    logger.error("请求失败，请求URL：{}，参数：{}，请求头：{}。", url, data, headers);
+                } else if (params != null) {
+                    logger.error("请求失败，请求URL：{}，参数：{}，请求头：{}。", url, params, headers);
+                } else {
+                    logger.error("请求失败，请求URL：{}，请求头：{}。", url, headers);
+                }
+            }
+        } catch (Exception e) {
+            logger.error(ExceptionUtils.getStackTrace(e));
+        }
+        return null;
     }
 
-    /**
-     * Send POST request
-     */
-/*    public static String put(String url, Map<String, String> queryParas, String data, Map<String, String> headers) {
-        HttpURLConnection conn = null;
-        try {
-            conn = getHttpConnection(buildUrlWithQueryString(url, queryParas), HTTP_PUT, headers);
-            conn.connect();
-            OutputStream out = conn.getOutputStream();
-            out.write(data.getBytes(CHARSET));
-            out.flush();
-            out.close();
-            return readResponseString(conn);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
-    }*/
-    public static String jsonPut(String url, String data) {
+    /*post end*/
+
+    /*get start*/
+
+    public static String jsonGet(String url, Map<String, Object> params){
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        return post(url, null, data, headers);
+        return get(url,params,headers);
     }
 
-
-    /**
-     * https 域名校验
-     */
-    private static class TrustAnyHostnameVerifier implements HostnameVerifier {
-        @Override
-        public boolean verify(String hostname, SSLSession session) {
-            return true;
-        }
+    public static String jsonGet(String url, Map<String, Object> params, Map<String, String> headers){
+        headers.put("Content-Type", "application/json");
+        return get(url,params,headers);
     }
 
-    /**
-     * https 证书管理
-     */
-    private static class TrustAnyTrustManager implements X509TrustManager {
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return null;
+    public static String get(String url, Map<String, Object> params, Map<String, String> headers) {
+        if (headers == null) {
+            headers = new HashMap<>();
         }
 
-        @Override
-        public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-        }
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-        }
-    }
-
-    private static SSLSocketFactory initSSLSocketFactory() {
         try {
-            TrustManager[] tm = {new TrustAnyTrustManager()};
-            SSLContext sslContext = SSLContext.getInstance("TLS", "SunJSSE");
-            sslContext.init(null, tm, new java.security.SecureRandom());
-            return sslContext.getSocketFactory();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static final SSLSocketFactory sslSocketFactory = initSSLSocketFactory();
-    private static final TrustAnyHostnameVerifier trustAnyHostnameVerifier = new TrustAnyHostnameVerifier();
-
-    private static HttpURLConnection getHttpConnection(String url, String method, Map<String, String> headers) throws Exception {
-        URL _url = new URL(url);
-        HttpURLConnection conn = (HttpURLConnection) _url.openConnection();
-        if (conn instanceof HttpsURLConnection) {
-            ((HttpsURLConnection) conn).setSSLSocketFactory(sslSocketFactory);
-            ((HttpsURLConnection) conn).setHostnameVerifier(trustAnyHostnameVerifier);
-        }
-        conn.setRequestMethod(method);
-        conn.setDoOutput(true);
-        conn.setDoInput(true);
-        conn.setConnectTimeout(30000);
-        conn.setReadTimeout(30000);
-        conn.setUseCaches(false); // Post 请求不能使用缓存
-        if (headers != null) {
-            String contentType = headers.get("Content-Type");
-            if (StringUtils.isNotEmpty(contentType)) {
-                conn.setRequestProperty("Content-Type", contentType);
+            URIBuilder uriBuilder = new URIBuilder(url);
+            if (params != null){
+                params.forEach((s, o) -> {
+                    uriBuilder.addParameter(s, String.valueOf(o));
+                });
+            }
+            HttpGet get = new HttpGet(uriBuilder.build());
+            headers.forEach(get::addHeader);
+            HttpClient httpClient = HttpClients.createDefault();
+            HttpResponse response = httpClient.execute(get);
+            if (response.getStatusLine().getStatusCode() == 200) {
+                HttpEntity resEntity = response.getEntity();
+                return EntityUtils.toString(resEntity, "utf-8");
             } else {
-                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+                if (params != null) {
+                    logger.error("请求失败，请求URL：{}，参数：{}，请求头：{}。", url, params, headers);
+                } else {
+                    logger.error("请求失败，请求URL：{}，请求头：{}。", url, headers);
+                }
             }
-        }
-        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.146 Safari/537.36");
-        if (headers != null && !headers.isEmpty())
-            for (Map.Entry<String, String> entry : headers.entrySet())
-                conn.setRequestProperty(entry.getKey(), entry.getValue());
-
-        return conn;
-    }
-
-    private static String readResponseString(HttpURLConnection conn) {
-        StringBuilder sb = new StringBuilder();
-        InputStream inputStream = null;
-        try {
-            inputStream = conn.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, CHARSET));
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line).append("\n");
-            }
-            return sb.toString();
         } catch (Exception e) {
-            //e.printStackTrace();
-            //throw new RuntimeException(e);
-            try {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getErrorStream(), CHARSET));
-                String line = null;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line).append("\n");
-                }
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
-            log.warning(sb.toString());
-            return sb.toString();
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            logger.error(ExceptionUtils.getStackTrace(e));
         }
+        return null;
     }
 
-    /**
-     * Build queryString of the url
-     */
-    private static String buildUrlWithQueryString(String url, Map<String, Object> queryParas) {
-        if (queryParas == null || queryParas.isEmpty())
-            return url;
-
-        StringBuilder sb = new StringBuilder(url);
-        boolean isFirst;
-        if (url.indexOf("?") == -1) {
-            isFirst = true;
-            sb.append("?");
-        } else {
-            isFirst = false;
-        }
-
-        for (Map.Entry<String, Object> entry : queryParas.entrySet()) {
-            if (isFirst) isFirst = false;
-            else sb.append("&");
-
-            String key = entry.getKey();
-            String value = String.valueOf(entry.getValue());
-            if (StringUtils.isNotEmpty(value)) {
-                try {
-                    value = URLEncoder.encode(value, CHARSET);
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException(e);
-                }
-                sb.append(key).append("=").append(value);
-            }
-        }
-        return sb.toString();
-    }
 }
-

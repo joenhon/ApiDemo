@@ -1,5 +1,6 @@
 package com.joen.apidemo.annotations;
 
+import com.joen.apidemo.enums.HttpBodyType;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 
@@ -23,5 +24,11 @@ public @interface ApiService {
      * @return
      */
     HttpMethod method() default HttpMethod.GET;
+
+    /**
+     * 请求参数类型
+     * @return
+     */
+    HttpBodyType bodyType() default HttpBodyType.RAW;
 
 }

@@ -1,5 +1,6 @@
 package com.joen.apidemo.models;
 
+import com.joen.apidemo.enums.HttpBodyType;
 import org.springframework.http.HttpMethod;
 
 import java.lang.invoke.MethodHandle;
@@ -12,6 +13,7 @@ import java.lang.invoke.MethodHandle;
 public class ApiReq {
     String url;
     HttpMethod method;
+    HttpBodyType bodyType;
     Class<?> result;
     MethodHandle methodHandle;
 
@@ -45,5 +47,13 @@ public class ApiReq {
 
     public void setMethodHandle(MethodHandle methodHandle) {
         this.methodHandle = methodHandle;
+    }
+
+    public HttpBodyType getBodyType() {
+        return bodyType;
+    }
+
+    public void setBodyType(HttpBodyType bodyType) {
+        this.bodyType = bodyType;
     }
 }
