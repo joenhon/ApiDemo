@@ -141,10 +141,10 @@ public class ApiProxy implements InvocationHandler {
                 break;
             case FORM_DATA:
                 if (param instanceof Map){
-                    result = HttpUtil.jsonPost(req.getUrl(), (Map<String, Object>) param);
+                    result = HttpUtil.post(req.getUrl(), null,(Map<String, Object>) param,null);
                 }else {
                     JSONObject object = JSON.parseObject(JSON.toJSONString(param));
-                    result = HttpUtil.jsonPost(req.getUrl(),object.getInnerMap());
+                    result = HttpUtil.post(req.getUrl(),null,object.getInnerMap(),null);
                 }
                 break;
             default:

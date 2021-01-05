@@ -8,13 +8,11 @@ package com.joen.apidemo.enums;
 public enum HttpBodyType {
     NONE("不传参数",0),
     FORM_DATA("表单传参",1),
+    RAW("字节流传参",2),
     @Deprecated
-    X_WWW_FORM_URLENCODED("",2),
-    RAW("字节流传参",3),
+    BINARY("",3),
     @Deprecated
-    BINARY("",4),
-    @Deprecated
-    GRAph_QL("",5);
+    GRAph_QL("",4);
 
     private String details;
     private int code;
