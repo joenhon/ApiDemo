@@ -20,7 +20,7 @@ public class TestController {
     @RequestMapping("test")
     public Object test(){
         JSONObject object = new JSONObject();
-        object.put("token","2cf8972cad81458db852c906dbe5a117");
+        //object.put("token","2cf8972cad81458db852c906dbe5a117");
         return service.jsonTest(object);
     }
 

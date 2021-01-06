@@ -21,11 +21,10 @@ public class Scanner {
 
     private static Set<Class<?>> Classes;
 
-    static {
+    public static void init(Class<?> mainClass){
         try {
-            String packageName = Scanner.class.getName();
+            String packageName = mainClass.getName();
             int index = packageName.lastIndexOf('.');
-            index = packageName.substring(0,index).lastIndexOf('.');
             Classes = getClasses(packageName.substring(0,index));
             Classes.addAll(getClasses(packageName.substring(0,index)));
 
