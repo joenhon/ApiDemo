@@ -1,6 +1,7 @@
 package com.joen.apidemo.utils;
 
 
+import com.alibaba.fastjson.JSON;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
@@ -106,6 +107,8 @@ public class HttpUtil {
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpResponse response = httpClient.execute(post);
             logger.debug("{}",((HttpUriRequest)post));
+            logger.debug("{}",params);
+            logger.debug("{}", JSON.toJSONString(post.getAllHeaders()));
             if (response.getStatusLine().getStatusCode() == 200) {
                 HttpEntity resEntity = response.getEntity();
                 return EntityUtils.toString(resEntity, "utf-8");

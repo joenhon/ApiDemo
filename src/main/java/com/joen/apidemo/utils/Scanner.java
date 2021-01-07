@@ -33,6 +33,16 @@ public class Scanner {
         }
     }
 
+    public static void init(String packageName){
+        try {
+            Classes = getClasses(packageName);
+            Classes.addAll(getClasses(packageName));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * 从包package中获取所有的Class
      *

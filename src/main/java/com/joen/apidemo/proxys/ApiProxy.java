@@ -50,27 +50,27 @@ public class ApiProxy implements InvocationHandler {
         Method[] methods = aClass.getMethods();
 
         try {
-            for (Method method : methods){
-                if (method.getName().equals("error")){
+            for (Method method : methods) {
+                if (method.getName().equals("error")) {
                     this.error = this.lookup.unreflectSpecial(method, this.interfaceClass).bindTo(proxy);
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error(ExceptionUtils.getStackTrace(e));
         }
 
         try {
-            for (Method method : methods){
-                if (method.getName().equals("preproccess")){
+            for (Method method : methods) {
+                if (method.getName().equals("preproccess")) {
                     Type[] types = method.getGenericParameterTypes();
-                    if (types.length != 2 && !(types[1] instanceof Class)){
+                    if (types.length != 2 && !(types[1] instanceof Class)) {
                         throw new RuntimeException("preproccess接口不符合规范");
                     }
                     pClass = (Class<?>) types[0];
                     this.preproccess = this.lookup.unreflectSpecial(method, this.interfaceClass).bindTo(proxy);
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error(ExceptionUtils.getStackTrace(e));
         }
 
@@ -92,17 +92,17 @@ public class ApiProxy implements InvocationHandler {
                 apiReq.setMethod(methodAnnotation.method());
                 apiReq.setBodyType(methodAnnotation.bodyType());
                 apiReq.setResult(method.getReturnType());
-                if (method.isDefault()){
+                if (method.isDefault()) {
                     apiReq.setMethodHandle(this.lookup.unreflectSpecial(method, this.interfaceClass).bindTo(proxy));
                 }
                 map.put(method, apiReq);
             }
             String request = request(apiReq, args[0]);
-            if (pClass != null && preproccess != null){
+            if (pClass != null && preproccess != null) {
 
             }
             Object object = JSON.parseObject(request, pClass);
-            result = preproccess.invokeWithArguments(object,apiReq.getResult());
+            result = preproccess.invokeWithArguments(object, apiReq.getResult());
 
         } catch (Exception e) {
             if (method.isDefault()) {
@@ -111,7 +111,7 @@ public class ApiProxy implements InvocationHandler {
             } else {
                 throw e;
             }
-            if (this.error != null){
+            if (this.error != null) {
                 this.error.invokeWithArguments(e);
             }
         }
@@ -121,11 +121,12 @@ public class ApiProxy implements InvocationHandler {
 
     /**
      * 请求
-     * @param req 请求配置
+     *
+     * @param req   请求配置
      * @param param 请求参数
      * @return
      */
-    private String request(ApiReq req,Object param) throws Throwable{
+    private String request(ApiReq req, Object param) throws Throwable {
         String result = null;
         switch (req.getMethod()) {
             case GET:
@@ -152,26 +153,27 @@ public class ApiProxy implements InvocationHandler {
 
     /**
      * POST 请求
+     *
      * @param req
      * @param param
      * @return
      * @throws Throwable
      */
-    private String post(ApiReq req,Object param) throws Throwable{
+    private String post(ApiReq req, Object param) throws Throwable {
         String result = null;
-        switch (req.getBodyType()){
+        switch (req.getBodyType()) {
             case NONE:
                 result = HttpUtil.jsonPost(req.getUrl());
                 break;
             case RAW:
-                result = HttpUtil.jsonPost(req.getUrl(),JSON.toJSONString(param));
+                result = HttpUtil.jsonPost(req.getUrl(), JSON.toJSONString(param));
                 break;
             case FORM_DATA:
-                if (param instanceof Map){
-                    result = HttpUtil.post(req.getUrl(), null,(Map<String, Object>) param,null);
-                }else {
+                if (param instanceof Map) {
+                    result = HttpUtil.post(req.getUrl(), null, (Map<String, Object>) param, null);
+                } else {
                     JSONObject object = JSON.parseObject(JSON.toJSONString(param));
-                    result = HttpUtil.post(req.getUrl(),null,object.getInnerMap(),null);
+                    result = HttpUtil.post(req.getUrl(), null, object.getInnerMap(), null);
                 }
                 break;
             default:
@@ -185,13 +187,13 @@ public class ApiProxy implements InvocationHandler {
         return result;
     }
 
-    private String getUrl(ApiService service){
-        if (service == null){
+    private String getUrl(ApiService service) {
+        if (service == null) {
             return "";
         }
         String url = service.value();
-        if (url.indexOf("${") == 0 && url.indexOf("}") == url.length()){
-            url = ApiBean.getProperty(url.substring(2,url.length()-1));
+        if (url.indexOf("${") == 0 && url.indexOf("}") == url.length() - 1) {
+            url = ApiBean.getProperty(url.substring(2, url.length() - 1));
         }
         return url;
     }
@@ -200,7 +202,7 @@ public class ApiProxy implements InvocationHandler {
         Class<TestService> testServiceClass = TestService.class;
         try {
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
