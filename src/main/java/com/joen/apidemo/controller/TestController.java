@@ -21,13 +21,16 @@ public class TestController {
     public Object test(){
         JSONObject object = new JSONObject();
         //object.put("token","2cf8972cad81458db852c906dbe5a117");
-        return service.jsonTest(object);
+        JSONObject object1 = service.test1(object);
+        return object1;
     }
 
     @RequestMapping("test1")
     public Object test1(String test,String test1){
         JSONObject object = new JSONObject();
-        object.put("test",test);
+        JSONObject object1 = new JSONObject();
+        object1.put("msg","测试");
+        object.put("test",object1);
         object.put("test1",test1);
         return object;
     }

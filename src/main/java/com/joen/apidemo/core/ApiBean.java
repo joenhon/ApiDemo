@@ -12,6 +12,7 @@ import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
@@ -27,6 +28,7 @@ public class ApiBean implements ApplicationContextAware, BeanDefinitionRegistryP
 
 
     private ApplicationContext applicationContext;
+    private static Environment environment;
 
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry beanDefinitionRegistry) throws BeansException {
@@ -57,6 +59,15 @@ public class ApiBean implements ApplicationContextAware, BeanDefinitionRegistryP
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
+        environment = applicationContext.getEnvironment();
+    }
+
+    public static String getProperty(String key){
+        return environment.getProperty(key);
+    }
+
+    public static <T> T getProperty(String key,Class<T> aClass){
+        return environment.getProperty(key,aClass);
     }
 
 }

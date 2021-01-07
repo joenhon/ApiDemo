@@ -42,4 +42,8 @@ public interface TestService {
     default void error(Exception exception){
         logger.error(",{}",ExceptionUtils.getStackTrace(exception));
     }
+
+    default Object preproccess(JSONObject object,Class<?> rClass){
+        return object.getObject("test",rClass);
+    }
 }

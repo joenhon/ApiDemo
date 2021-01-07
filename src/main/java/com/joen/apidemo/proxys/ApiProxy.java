@@ -3,7 +3,9 @@ package com.joen.apidemo.proxys;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.joen.apidemo.annotations.ApiService;
+import com.joen.apidemo.core.ApiBean;
 import com.joen.apidemo.models.ApiReq;
+import com.joen.apidemo.service.TestService;
 import com.joen.apidemo.utils.HttpUtil;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -11,10 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.lang.reflect.*;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +30,8 @@ public class ApiProxy implements InvocationHandler {
     private Class<?> interfaceClass;
     private MethodHandles.Lookup lookup;
     private MethodHandle error;
+    private MethodHandle preproccess;
+    private Class<?> pClass;
 
     public Object bind(Class<?> aClass) {
         this.interfaceClass = aClass;
@@ -46,9 +47,29 @@ public class ApiProxy implements InvocationHandler {
             logger.error(ExceptionUtils.getStackTrace(e));
         }
 
+        Method[] methods = aClass.getMethods();
+
         try {
-            Method error = aClass.getDeclaredMethod("error", Exception.class);
-            this.error = this.lookup.unreflectSpecial(error, this.interfaceClass).bindTo(proxy);
+            for (Method method : methods){
+                if (method.getName().equals("error")){
+                    this.error = this.lookup.unreflectSpecial(method, this.interfaceClass).bindTo(proxy);
+                }
+            }
+        }catch (Exception e){
+            logger.error(ExceptionUtils.getStackTrace(e));
+        }
+
+        try {
+            for (Method method : methods){
+                if (method.getName().equals("preproccess")){
+                    Type[] types = method.getGenericParameterTypes();
+                    if (types.length != 2 && !(types[1] instanceof Class)){
+                        throw new RuntimeException("preproccess接口不符合规范");
+                    }
+                    pClass = (Class<?>) types[0];
+                    this.preproccess = this.lookup.unreflectSpecial(method, this.interfaceClass).bindTo(proxy);
+                }
+            }
         }catch (Exception e){
             logger.error(ExceptionUtils.getStackTrace(e));
         }
@@ -67,7 +88,7 @@ public class ApiProxy implements InvocationHandler {
                 ApiService methodAnnotation = method.getAnnotation(ApiService.class);
                 ApiService classAnnotation = interfaceClass.getAnnotation(ApiService.class);
                 apiReq = new ApiReq();
-                apiReq.setUrl((classAnnotation != null ? classAnnotation.value() : "") + methodAnnotation.value());
+                apiReq.setUrl(getUrl(classAnnotation) + getUrl(methodAnnotation));
                 apiReq.setMethod(methodAnnotation.method());
                 apiReq.setBodyType(methodAnnotation.bodyType());
                 apiReq.setResult(method.getReturnType());
@@ -76,16 +97,22 @@ public class ApiProxy implements InvocationHandler {
                 }
                 map.put(method, apiReq);
             }
-            result = JSON.parseObject(request(apiReq, args[0]),apiReq.getResult());
+            String request = request(apiReq, args[0]);
+            if (pClass != null && preproccess != null){
+
+            }
+            Object object = JSON.parseObject(request, pClass);
+            result = preproccess.invokeWithArguments(object,apiReq.getResult());
+
         } catch (Exception e) {
             if (method.isDefault()) {
                 assert apiReq != null;
                 result = apiReq.getMethodHandle().invokeWithArguments(args);
             } else {
-                if (this.error != null){
-                    this.error.invokeWithArguments(e);
-                }
                 throw e;
+            }
+            if (this.error != null){
+                this.error.invokeWithArguments(e);
             }
         }
         logger.debug("调用动态代理方法-----结束，使用时间：{}", new Date().getTime() - date.getTime());
@@ -156,6 +183,27 @@ public class ApiProxy implements InvocationHandler {
                 break;
         }
         return result;
+    }
+
+    private String getUrl(ApiService service){
+        if (service == null){
+            return "";
+        }
+        String url = service.value();
+        if (url.indexOf("${") == 0 && url.indexOf("}") == url.length()){
+            url = ApiBean.getProperty(url.substring(2,url.length()-1));
+        }
+        return url;
+    }
+
+    public static void main(String[] args) {
+        Class<TestService> testServiceClass = TestService.class;
+        try {
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
     }
 
 }
