@@ -30,6 +30,13 @@ public class ApiBean implements ApplicationContextAware, BeanDefinitionRegistryP
     private ApplicationContext applicationContext;
     private static Environment environment;
 
+    public ApiBean(){
+    }
+
+    public ApiBean(String path){
+        Scanner.init(path);
+    }
+
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry beanDefinitionRegistry) throws BeansException {
         try {

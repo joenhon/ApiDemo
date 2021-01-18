@@ -29,4 +29,8 @@ public enum HttpBodyType {
     public int getCode() {
         return code;
     }
+
+    public boolean equals(int code){
+        return this.code == code;
+    }
 }
