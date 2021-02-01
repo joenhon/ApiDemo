@@ -102,12 +102,11 @@ public class HttpUtil {
 
 
         post.setConfig(requestConfig);
-
+        logger.debug("{}",((HttpUriRequest)post));
+        logger.debug("{}",params);
         try {
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpResponse response = httpClient.execute(post);
-            logger.debug("{}",((HttpUriRequest)post));
-            logger.debug("{}",params);
             logger.debug("{}", JSON.toJSONString(post.getAllHeaders()));
             if (response.getStatusLine().getStatusCode() == 200) {
                 HttpEntity resEntity = response.getEntity();
