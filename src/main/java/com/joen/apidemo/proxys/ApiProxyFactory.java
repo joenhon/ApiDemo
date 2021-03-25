@@ -32,7 +32,7 @@ public class ApiProxyFactory<T> implements FactoryBean<T> {
     @Override
     public boolean isSingleton() {
         // 单例模式
-        return true ;
+        return true;
     }
 
 }

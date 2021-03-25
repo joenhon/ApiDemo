@@ -102,8 +102,8 @@ public class HttpUtil {
 
 
         post.setConfig(requestConfig);
-        logger.debug("{}",((HttpUriRequest)post));
-        logger.debug("{}",params);
+        logger.debug("{}", ((HttpUriRequest) post));
+        logger.debug("{}", params);
         try {
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpResponse response = httpClient.execute(post);
@@ -130,15 +130,15 @@ public class HttpUtil {
 
     /*get start*/
 
-    public static String jsonGet(String url, Map<String, Object> params){
+    public static String jsonGet(String url, Map<String, Object> params) {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        return get(url,params,headers);
+        return get(url, params, headers);
     }
 
-    public static String jsonGet(String url, Map<String, Object> params, Map<String, String> headers){
+    public static String jsonGet(String url, Map<String, Object> params, Map<String, String> headers) {
         headers.put("Content-Type", "application/json");
-        return get(url,params,headers);
+        return get(url, params, headers);
     }
 
     public static String get(String url, Map<String, Object> params, Map<String, String> headers) {
@@ -148,7 +148,7 @@ public class HttpUtil {
 
         try {
             URIBuilder uriBuilder = new URIBuilder(url);
-            if (params != null){
+            if (params != null) {
                 params.forEach((s, o) -> {
                     uriBuilder.addParameter(s, String.valueOf(o));
                 });
